@@ -3,7 +3,8 @@ RUN wget https://download.geofabrik.de/europe/great-britain-latest.osm.pbf -O /m
 
 FROM osrm/osrm-backend:v5.25.0 AS builder
 COPY --from=download /map.osm.pbf /data/
-RUN osrm-extract -p /opt/car.lua /data/map.osm.pbf
+COPY ./profile/ /profile/
+RUN osrm-extract -p /profile/artic.lua /data/map.osm.pbf
 RUN osrm-partition /data/map.osm.pbf
 RUN osrm-customize /data/map.osm.pbf
 

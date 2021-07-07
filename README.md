@@ -1,5 +1,9 @@
 # uk-osrm-backend
 
+## OSMR truck profile
+
+Profile modified and taken from https://github.com/Project-OSRM/osrm-profiles-contrib
+
 ## OSRM docker
 
 - [Docker hub page](https://hub.docker.com/r/osrm/osrm-backend/)
