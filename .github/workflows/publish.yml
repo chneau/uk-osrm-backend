@@ -13,6 +13,7 @@ jobs:
 
     env:
       DOCKER_REGISTRY: ghcr.io
+      DOCKER_BUILDKIT: "1"
 
     steps:
       - uses: actions/checkout@v3
