@@ -40,7 +40,7 @@ function WayHandlers.names(profile, way, result, data)
     end
 
     if ref then
-        result.ref = canonicalizeStringList(ref)
+        result.ref = canonicalizeStringList(ref, ";")
     end
 
     if pronunciation then
@@ -48,7 +48,7 @@ function WayHandlers.names(profile, way, result, data)
     end
 
     if exits then
-        result.exits = canonicalizeStringList(exits)
+        result.exits = canonicalizeStringList(exits, ";")
     end
 end
 
@@ -110,7 +110,7 @@ end
 function WayHandlers.destinations(profile, way, result, data)
     if data.is_forward_oneway or data.is_reverse_oneway then
         local destination = get_destination(way, data.is_forward_oneway)
-        result.destinations = canonicalizeStringList(destination)
+        result.destinations = canonicalizeStringList(destination, ",")
     end
 end
 

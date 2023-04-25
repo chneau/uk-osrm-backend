@@ -5,6 +5,7 @@ Set = require('lib/set')
 Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
 Relations = require("lib/relations")
+TrafficSignal = require("lib/traffic_signal")
 find_access_tag = require("lib/access").find_access_tag
 limit = require("lib/maxspeed").limit
 Utils = require("lib/utils")
@@ -42,7 +43,7 @@ function setup()
         vehicle_width = 2.5, -- in meters
 
         -- Size of the vehicle, to be limited mostly by legal restriction of the way
-        vehicle_length = 16.5, -- in meters
+        vehicle_length = 16.5, -- in meters, 4.8m is the length of large or familly car
         vehicle_weight = 44000, -- in kilograms
 
         -- a list of suffixes to suppress in name change instructions. The suffixes also include common substrings of each other
@@ -79,19 +80,19 @@ function setup()
         speeds = Sequence {
             highway = {
                 motorway = 89,
-                motorway_link = 60,
+                motorway_link = 45,
                 trunk = 80,
-                trunk_link = 60,
-                primary = 80,
-                primary_link = 60,
-                secondary = 80,
-                secondary_link = 60,
-                tertiary = 80,
-                tertiary_link = 60,
-                unclassified = 64,
-                residential = 48,
-                living_street = 32,
-                service = 32
+                trunk_link = 40,
+                primary = 65,
+                primary_link = 30,
+                secondary = 55,
+                secondary_link = 25,
+                tertiary = 40,
+                tertiary_link = 20,
+                unclassified = 25,
+                residential = 25,
+                living_street = 10,
+                service = 15
             }
         },
 
@@ -210,6 +211,8 @@ function setup()
             ["at:rural"] = 100,
             ["at:trunk"] = 100,
             ["be:motorway"] = 120,
+            ["be-bru:rural"] = 70,
+            ["be-bru:urban"] = 30,
             ["be-vlg:rural"] = 70,
             ["by:urban"] = 60,
             ["by:motorway"] = 110,
@@ -223,10 +226,9 @@ function setup()
             ["de:motorway"] = 0,
             ["dk:rural"] = 80,
             ["fr:rural"] = 80,
-            ["GB:urban"] = (20 * 1609) / 1000,
-            ["GB:nsl_single"] = (40 * 1609) / 1000,
-            ["GB:nsl_dual"] = (50 * 1609) / 1000,
-            ["GB:motorway"] = (60 * 1609) / 1000,
+            ["gb:nsl_single"] = (40 * 1609) / 1000,
+            ["gb:nsl_dual"] = (50 * 1609) / 1000,
+            ["gb:motorway"] = (60 * 1609) / 1000,
             ["nl:rural"] = 80,
             ["nl:trunk"] = 100,
             ['no:rural'] = 80,
@@ -277,17 +279,22 @@ function process_node(profile, node, result, relations)
             local bollard = node:get_value_by_key("bollard")
             local rising_bollard = bollard and "rising" == bollard
 
-            if not profile.barrier_whitelist[barrier] and not rising_bollard or restricted_by_height then
+            -- make an exception for lowered/flat barrier=kerb
+            -- and incorrect tagging of highway crossing kerb as highway barrier
+            local kerb = node:get_value_by_key("kerb")
+            local highway = node:get_value_by_key("highway")
+            local flat_kerb = kerb and ("lowered" == kerb or "flush" == kerb)
+            local highway_crossing_kerb = barrier == "kerb" and highway and highway == "crossing"
+
+            if not profile.barrier_whitelist[barrier] and not rising_bollard and not flat_kerb and
+                not highway_crossing_kerb or restricted_by_height then
                 result.barrier = true
             end
         end
     end
 
     -- check if node is a traffic light
-    local tag = node:get_value_by_key("highway")
-    if "traffic_signals" == tag then
-        result.traffic_lights = true
-    end
+    result.traffic_lights = TrafficSignal.get_value(node)
 end
 
 function process_way(profile, way, result, relations)
@@ -331,7 +338,7 @@ function process_way(profile, way, result, relations)
     WayHandlers.ferries, WayHandlers.movables, -- handle service road restrictions
     WayHandlers.service, -- handle hov
     WayHandlers.hov, -- compute speed taking into account way type, maxspeed tags, etc.
-    WayHandlers.speed, WayHandlers.surface, WayHandlers.maxspeed, WayHandlers.penalties,
+    WayHandlers.speed, WayHandlers.maxspeed, WayHandlers.surface, WayHandlers.penalties,
 
     -- set penalty to try to follow legal access restriction
     WayHandlers.handle_weight, WayHandlers.handle_length, WayHandlers.handle_hgv_access, -- compute class labels
