@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "start": "npm run build",
+    "build": "docker build -t ghcr.io/chneau/uk-osrm-backend ."
+  }
+}
