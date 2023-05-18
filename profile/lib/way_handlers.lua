@@ -686,7 +686,6 @@ function WayHandlers.blocked_ways(profile, way, result, data)
     end
 
     -- construction
-    -- TODO if highway is valid then we shouldn't check railway, and vica versa
     if profile.avoid.construction and
         (data.highway == 'construction' or way:get_value_by_key('railway') == 'construction') then
         return false
